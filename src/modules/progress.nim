@@ -7,7 +7,7 @@ proc progressBar*(current: int, total: int, width: int = 30) =
     let filled = int(percent / 100.0 * width.float)
     let empty = width - filled
     let bar = "#".repeat(filled) & ".".repeat(empty)
-    let (x, y) = getCursorPos()
+    let (_, y) = getCursorPos()
     eraseLine()
     setCursorPos(0, y)
     
@@ -19,7 +19,7 @@ proc progressBar*(current: int, total: int, width: int = 30) =
 
 proc spinner*(message: string = "Загрузка", delay: int = 150, frames: seq[string] = @["   ", ".  ", ".. ", "..."]) =
     for frame in frames:
-        let (x, y) = getCursorPos()
+        let (_, y) = getCursorPos()
         
         eraseLine()
         setCursorPos(0, y)

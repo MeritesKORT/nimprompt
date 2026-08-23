@@ -1,8 +1,12 @@
 # Package
-version       = "0.1.0"
+
+version       = "0.1.1"
 author        = "MeritesKORT"
-description   = "A simple library for interactive CLI prompts"
+description   = "Terminal UI utilities: pretty tables, progress bars, spinners and user prompts"
 license       = "MIT"
 srcDir        = "src"
+
+
+# Dependencies
 
 requires "nim >= 2.0.0"
