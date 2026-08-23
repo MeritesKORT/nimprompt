@@ -1,4 +1,4 @@
-import nimprompt, strformat
+import ../src/nimprompt, strformat
 
 var name = ask("как вас зовут? ", false, 3)
 echo fmt"вас зовут {name}"

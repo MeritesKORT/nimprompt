@@ -1,10 +1,10 @@
-import strformat, strutils
+import strutils, strformat
+
 const
-  RESET* = "\e[0m"
-  RED = "\e[31m"
-  GREEN* = "\e[32m"
-  YELLOW = "\e[33m"
-  CYAN = "\e[36m"
+    RESET = "\e[0m"
+    RED = "\e[31m"
+    YELLOW = "\e[33m"
+    CYAN = "\e[36m"
 
 
 proc ask*(question: string, required: bool = false, minLength: int = 0): string =
@@ -15,31 +15,33 @@ proc ask*(question: string, required: bool = false, minLength: int = 0): string 
         answer = answer.strip()
 
         if required and answer.len == 0:
-            echo RED & "This field is required." & RESET
+            echo fmt"{RED}This field is required.{RESET}"
             continue
         if answer.len < minLength:
-            echo RED & "The answer does not meet the required length." & RESET
+            echo fmt"{RED}The answer does not meet the required length.{RESET}"
             continue
         return answer
 
 proc askChoiceIndex*(question: string, options: seq[string]): int =
-  while true:
-    echo fmt"{YELLOW}question:{RESET} {question}"
-    for i, option in options:
-      echo fmt"  {YELLOW}{i + 1}{RESET}. {CYAN}{option}{RESET}"
-    
-    stdout.write(fmt"{YELLOW}>{RESET} ")
-    stdout.flushFile()
-    let answer = stdin.readLine().strip()
-    
-    try:
-      let idx = parseInt(answer)
-      if idx >= 1 and idx <= options.len:
-        return idx
-      else:
-        echo fmt"{RED}Введите число от 1 до {options.len}{RESET}"
-    except ValueError:
-      echo fmt"{RED}Введите число, а не текст.{RESET}"
+    if options.len == 0:
+        return
+    while true:
+        echo fmt"{YELLOW}question:{RESET} {question}"
+        for i, option in options:
+            echo fmt"  {YELLOW}{i + 1}{RESET}. {CYAN}{option}{RESET}"
+        
+        stdout.write(fmt"{YELLOW}>{RESET} ")
+        stdout.flushFile()
+        let answer = stdin.readLine().strip()
+        
+        try:
+            let idx = parseInt(answer)
+            if idx >= 1 and idx <= options.len:
+                return idx
+            else:
+                echo fmt"{RED}Enter a number between 1 and {options.len}{RESET}"
+        except ValueError:
+            echo fmt"{RED}Enter valid number.{RESET}"
 
 proc askChoice*(question: string, options: seq[string]): string =
     let idx = askChoiceIndex(question, options)
@@ -64,4 +66,4 @@ proc askYesNo*(question: string, default: bool = false): bool =
         elif answer.len == 0:
             return default
         else:
-            echo fmt"{RED}ответ не валидный{RESET}"
+            echo fmt"{RED}This option is unavailable.{RESET}"
