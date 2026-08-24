@@ -6,44 +6,82 @@ It provides a clean and colorful way to ask users for input in the terminal, wit
 
 ## Features
 
+### prompt
+
 - **`ask`**: Get string input with validation (required fields, minimum length).
 - **`askChoice`**: Let the user select an option from a numbered list.
 - **`askYesNo`**: Get a boolean answer with a default value (Y/n).
 - **Colorful output**: Built-in ANSI colors for a better CLI experience.
+
+### progress
+
+- **`progressBar`**: Visualizes task progress. Ideal for file downloads, data processing, or any operation with a known number of steps.
+- **`Spinner`**: Displays an animated loading indicator. Used for long-running operations with an unknown duration to show the program is still working.
+
+## tables
+
+- **`printTables`**: Renders formatted tables with auto-calculated column widths and clean Unicode borders in a single function call.
 
 ## Installation
 
 Since the library is not yet published on Nimble, you can use it by cloning the repository:
 
 ```bash
-git clone https://github.com/MeritesKORT/nimprompt.git
+nimble install nimprompt
 ```
-
-Then, import it in your project (make sure src/ is in your import path):
 
 ## Usage
 
 Here is a quick example of how to use **nimprompt**
 
 ```nim
-import src/nimprompt
+import nimprompt
 import strformat
 
-# 1. Basics text input with validation
-let name = ask("What is your name?", required=true, minLength=2)
+# ==========================================
+# 1. Interactive Prompts
+# ==========================================
 
-# 2. Choice from a list(return string)
-let color = askChoice("Choice your favorite color:", @["Red", "Green", "Blue"])
+# Text input with validation
+let name = ask("What is your name?", required = true, minLength = 2)
 
-# 3. Choice from a list(return int)
-let role = askChoiceIndex("Choice role", @["Admin", "Moderator", "User"])
+# Choice from a list (returns the selected string)
+let color = askChoice("Choose your favorite color:", @["Red", "Green", "Blue"])
 
-# 4. Yes/No question with a default value
+# Choice from a list (returns the selected index as int)
+let roleIndex = askChoiceIndex("Choose your role:", @["Admin", "Moderator", "User"])
+
+# Yes/No question with a default value
 let confirm = askYesNo("Do you want to save the changes?", default = true)
 
-# Output the results
-echo fmt"Hello, {name}!" # return string
-echo fmt"You choice {color}" # return string
-echo fmt"Role Index {role}" # return int
-echo fmt"Changes saved: {confirm}" # return bool
+echo fmt"Hello, {name}!"
+echo fmt"You chose: {color}"
+echo fmt"Role Index: {roleIndex}"
+echo fmt"Changes saved: {confirm}"
+
+
+# ==========================================
+# 2. Beautiful Tables
+# ==========================================
+
+let headers = @["Name", "Age", "City"]
+let rows = @[
+  @["John", "25", "New York"],
+  @["James", "30", "Chicago"]
+]
+
+# Automatically calculates widths and draws the table
+printTable(headers, rows)
+
+
+# ==========================================
+# 3. Loading Indicators (Progress & Spinners)
+# ==========================================
+
+# Example: Progress bar
+progressBar(current, total, width = 50)
+
+# Example: Spinner
+spinner("Processing data...")
+sleep(2000) # Simulate work
 ```

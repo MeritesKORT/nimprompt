@@ -17,7 +17,7 @@ proc progressBar*(current: int, total: int, width: int = 30) =
     if current == total:
         echo ""
 
-proc spinner*(message: string = "Загрузка", delay: int = 150, frames: seq[string] = @["   ", ".  ", ".. ", "..."]) =
+proc spinner*(message: string = "Downloading", delay: int = 150, frames: seq[string] = @["   ", ".  ", ".. ", "..."]) =
     for frame in frames:
         let (_, y) = getCursorPos()
         
