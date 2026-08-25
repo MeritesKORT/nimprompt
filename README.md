@@ -11,6 +11,7 @@ It provides a clean and colorful way to ask users for input in the terminal, wit
 - **`ask`**: Get string input with validation (required fields, minimum length).
 - **`askChoice`**: Let the user select an option from a numbered list.
 - **`askYesNo`**: Get a boolean answer with a default value (Y/n).
+- **`askMenu`**: A cross-platform, interactive menu with arrow-key navigation
 - **Colorful output**: Built-in ANSI colors for a better CLI experience.
 
 ### progress
@@ -18,7 +19,7 @@ It provides a clean and colorful way to ask users for input in the terminal, wit
 - **`progressBar`**: Visualizes task progress. Ideal for file downloads, data processing, or any operation with a known number of steps.
 - **`Spinner`**: Displays an animated loading indicator. Used for long-running operations with an unknown duration to show the program is still working.
 
-## tables
+### tables
 
 - **`printTables`**: Renders formatted tables with auto-calculated column widths and clean Unicode borders in a single function call.
 
@@ -51,12 +52,16 @@ let color = askChoice("Choose your favorite color:", @["Red", "Green", "Blue"])
 # Choice from a list (returns the selected index as int)
 let roleIndex = askChoiceIndex("Choose your role:", @["Admin", "Moderator", "User"])
 
+# Prompt the user to select an OS from a list of strings
+let os = askMenu("Select your OS:", @["Windows", "Linux", "macOS"])
+
 # Yes/No question with a default value
 let confirm = askYesNo("Do you want to save the changes?", default = true)
 
 echo fmt"Hello, {name}!"
 echo fmt"You chose: {color}"
 echo fmt"Role Index: {roleIndex}"
+echo fmt"You chose: {os}"
 echo fmt"Changes saved: {confirm}"
 
 

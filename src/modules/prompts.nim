@@ -1,4 +1,4 @@
-import strutils, strformat
+import strutils, strformat, terminal, winlean
 
 const
     RESET = "\e[0m"
@@ -7,11 +7,69 @@ const
     CYAN = "\e[36m"
 
 
-proc ask*(question: string, required: bool = false, minLength: int = 0): string =
+type MenuKey = enum
+    mkUp, mkDown, mkEnter
+
+
+when defined(windows):
+    const
+        KEY_EVENT = 0x0001
+        VK_RETURN = 0x0D
+        VK_UP = 0x26
+        VK_DOWN = 0x28
+
+    proc flushConsoleInputBuffer(hConsoleInput: Handle): WINBOOL {.
+        stdcall, dynlib: "kernel32", importc: "FlushConsoleInputBuffer".}
+
+    proc getVirtualKey(): int =
+        let fd = getStdHandle(STD_INPUT_HANDLE)
+        discard flushConsoleInputBuffer(fd)
+        var rec: KEY_EVENT_RECORD
+        var numRead: cint
+        
+        while true:
+            discard readConsoleInput(fd, addr(rec), 1, addr(numRead))
+            if rec.eventType == KEY_EVENT and rec.bKeyDown != 0:
+                if rec.uChar != 0:
+                    return int(rec.uChar)
+                else:
+                    return int(rec.wVirtualKeyCode)
+
+proc getMenuKey(): MenuKey =
+    when defined(windows):
+        let key = getVirtualKey()
+        if key == VK_RETURN: 
+            return mkEnter
+        elif key == VK_UP: 
+            return mkUp
+        elif key == VK_DOWN: 
+            return mkDown
+        else: 
+            return mkEnter
+    else:
+        let c = getch()
+        if c == '\r' or c == '\n':
+            return mkEnter
+        elif c == '\x1B':
+            let c2 = getch()
+            if c2 == '[':
+                let c3 = getch()
+                if c3 == 'A': 
+                    return mkUp
+                elif c3 == 'B': 
+                    return mkDown
+        return mkEnter
+    
+proc ask*(question: string, required: bool = false, minLength: int = 0, hidden: bool = false): string = 
     while true:
         stdout.write(question)
         stdout.flushFile()
-        var answer = stdin.readLine()
+        var answer: string
+
+        if hidden:
+            answer = readPasswordFromStdin("")
+        else:
+            answer = stdin.readLine()
         answer = answer.strip()
 
         if required and answer.len == 0:
@@ -21,6 +79,46 @@ proc ask*(question: string, required: bool = false, minLength: int = 0): string 
             echo fmt"{RED}The answer does not meet the required length.{RESET}"
             continue
         return answer
+
+proc askMenu*(question: string, choices: seq[string]): int =
+    var currentIndex = 0
+    
+    echo question
+    for i, choice in choices:
+        if i == currentIndex:
+            echo fmt"> {choice}"
+        else:
+            echo fmt"  {choice}"
+    
+    while true:
+        let key = getMenuKey()
+        
+        if key == mkEnter:
+            return currentIndex
+
+        if key == mkUp:
+            if currentIndex == 0:
+                currentIndex = choices.len - 1
+            else:
+                dec currentIndex
+            cursorUp(choices.len)
+            for i, choice in choices:
+                if i == currentIndex:
+                    echo fmt"> {choice}"
+                else:
+                    echo fmt"  {choice}"
+                    
+        elif key == mkDown:
+            if currentIndex == choices.len - 1:
+                currentIndex = 0
+            else:
+                inc currentIndex
+            cursorUp(choices.len)
+            for i, choice in choices:
+                if i == currentIndex:
+                    echo fmt"> {choice}"
+                else:
+                    echo fmt"  {choice}"
 
 proc askChoiceIndex*(question: string, options: seq[string]): int =
     if options.len == 0:
