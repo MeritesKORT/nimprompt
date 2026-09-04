@@ -1,5 +1,8 @@
 import strutils, unicode, strformat, sequtils
 
+type LineType* = enum
+    ItTop, ItMiddle, ItBottom
+
 proc getMaxWidths(headers: seq[string], rows: seq[seq[string]]): seq[int] = 
     var columnWidths = headers.mapIt(runeLen(it))
     for row in rows:
@@ -9,24 +12,22 @@ proc getMaxWidths(headers: seq[string], rows: seq[seq[string]]): seq[int] =
                 columnWidths[i] = cellLen
     return columnWidths
 
-proc drawLine(widths: seq[int], lineType: string) = 
+proc drawLine(widths: seq[int], lineType: LineType) = 
     var startChar = ""
     var sepChar = ""
     var endChar = ""
-    var middleChar = ""
     case lineType
-    of "top":
+    of ItTop:
         startChar = "┌"
         sepChar = "┬"
         endChar = "┐"
-        middleChar = ""
     
-    of "middle":
+    of ItMiddle:
         startChar = "├"
         sepChar = "┼"
         endChar = "┤"
 
-    of "bottom":
+    of ItBottom:
         startChar = "└"
         sepChar = "┴"
         endChar = "┘"
@@ -48,14 +49,20 @@ proc drawRow(cells: seq[string], widths: seq[int]) =
     echo ""
         
 proc printTable*(headers: seq[string], rows: seq[seq[string]]) = 
+    if headers.len == 0:
+        raise newException(ValueError, "The list of headers cannot be empty")
+    
+    for row in rows:
+        if row.len != headers.len:
+            raise newException(ValueError, "The line length does not match the number of headers")
     let widths = getMaxWidths(headers, rows)
-    drawLine(widths, "top")
+    drawLine(widths, ItTop)
     drawRow(headers, widths)
-    drawLine(widths, "middle")
+    drawLine(widths, ItMiddle)
     
     for i, row in rows:
         drawRow(row, widths)
         if i != rows.len - 1:
-            drawLine(widths, "middle")
+            drawLine(widths, ItMiddle)
             
-    drawLine(widths, "bottom")
+    drawLine(widths, ItBottom)

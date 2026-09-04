@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.3"
+version       = "0.1.4"
 author        = "MeritesKORT"
 description   = "Terminal UI utilities: pretty tables, progress bars, spinners and user prompts"
 license       = "MIT"

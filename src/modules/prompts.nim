@@ -1,4 +1,4 @@
-import strutils, strformat, terminal, winlean
+import strutils, strformat, terminal, winlean, unicode
 
 const
     RESET = "\e[0m"
@@ -8,7 +8,7 @@ const
 
 
 type MenuKey = enum
-    mkUp, mkDown, mkEnter
+    mkUp, mkDown, mkEnter, mkUnknown
 
 
 when defined(windows):
@@ -45,7 +45,7 @@ proc getMenuKey(): MenuKey =
         elif key == VK_DOWN: 
             return mkDown
         else: 
-            return mkEnter
+            return mkUnknown
     else:
         let c = getch()
         if c == '\r' or c == '\n':
@@ -58,9 +58,11 @@ proc getMenuKey(): MenuKey =
                     return mkUp
                 elif c3 == 'B': 
                     return mkDown
-        return mkEnter
+        return mkUnknown
     
 proc ask*(question: string, required: bool = false, minLength: int = 0, hidden: bool = false): string = 
+    if minLength < 0:
+        raise newException(ValueError, "The length of the response cannot be less than zero")
     while true:
         stdout.write(question)
         stdout.flushFile()
@@ -72,15 +74,18 @@ proc ask*(question: string, required: bool = false, minLength: int = 0, hidden: 
             answer = stdin.readLine()
         answer = answer.strip()
 
-        if required and answer.len == 0:
+        if required and answer.runeLen == 0:
             echo fmt"{RED}This field is required.{RESET}"
             continue
-        if answer.len < minLength:
+        if answer.runeLen < minLength:
             echo fmt"{RED}The answer does not meet the required length.{RESET}"
             continue
         return answer
 
-proc askMenu*(question: string, choices: seq[string]): int =
+proc askMenu*(question: string, choices: seq[string]): string =
+    if choices.len == 0:
+        raise newException(ValueError, "The list of options cannot be empty")
+
     var currentIndex = 0
     
     echo question
@@ -94,14 +99,16 @@ proc askMenu*(question: string, choices: seq[string]): int =
         let key = getMenuKey()
         
         if key == mkEnter:
-            return currentIndex
+            return choices[currentIndex]
 
         if key == mkUp:
             if currentIndex == 0:
                 currentIndex = choices.len - 1
             else:
                 dec currentIndex
-            cursorUp(choices.len)
+            for i in 0 ..< choices.len:
+                cursorUp(1)
+                eraseLine()
             for i, choice in choices:
                 if i == currentIndex:
                     echo fmt"> {choice}"
@@ -113,19 +120,21 @@ proc askMenu*(question: string, choices: seq[string]): int =
                 currentIndex = 0
             else:
                 inc currentIndex
-            cursorUp(choices.len)
+            for i in 0 ..< choices.len:
+                cursorUp(1)
+                eraseLine()
             for i, choice in choices:
                 if i == currentIndex:
                     echo fmt"> {choice}"
                 else:
                     echo fmt"  {choice}"
 
-proc askChoiceIndex*(question: string, options: seq[string]): int =
-    if options.len == 0:
-        return
+proc askChoiceIndex*(question: string, choices: seq[string]): int =
+    if choices.len == 0:
+        raise newException(ValueError, "The list of options cannot be empty")
     while true:
         echo fmt"{YELLOW}question:{RESET} {question}"
-        for i, option in options:
+        for i, option in choices:
             echo fmt"  {YELLOW}{i + 1}{RESET}. {CYAN}{option}{RESET}"
         
         stdout.write(fmt"{YELLOW}>{RESET} ")
@@ -134,16 +143,16 @@ proc askChoiceIndex*(question: string, options: seq[string]): int =
         
         try:
             let idx = parseInt(answer)
-            if idx >= 1 and idx <= options.len:
+            if idx >= 1 and idx <= choices.len:
                 return idx
             else:
-                echo fmt"{RED}Enter a number between 1 and {options.len}{RESET}"
+                echo fmt"{RED}Enter a number between 1 and {choices.len}{RESET}"
         except ValueError:
             echo fmt"{RED}Enter valid number.{RESET}"
 
-proc askChoice*(question: string, options: seq[string]): string =
-    let idx = askChoiceIndex(question, options)
-    return options[idx - 1]
+proc askChoice*(question: string, choices: seq[string]): string =
+    let idx = askChoiceIndex(question, choices)
+    return choices[idx - 1]
         
 proc askYesNo*(question: string, default: bool = false): bool =
     const
@@ -155,7 +164,7 @@ proc askYesNo*(question: string, default: bool = false): bool =
     while true:
         stdout.write(fmt"{YELLOW}{question} {hint}{RESET} ")
         stdout.flushFile()
-        let answer = stdin.readLine().strip().toLowerAscii()
+        let answer = stdin.readLine().strip().toLower()
 
         if answer in yes_seq:
             return true
